@@ -1,0 +1,16 @@
+{
+  "agent_id": "agent_codex_primary",
+  "agent_type": "execution_node",
+  "capabilities": [
+    "code_generation",
+    "state_sync",
+    "file_ops",
+    "task_orchestration"
+  ],
+  "creation_timestamp": "2026-05-23T08:01:21.446661+00:00",
+  "last_active": "2026-05-23T08:01:21.446661+00:00",
+  "status": "active",
+  "owned_tasks": [],
+  "generated_artifacts": [],
+  "execution_count": 1
+}

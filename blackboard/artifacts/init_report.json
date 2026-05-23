@@ -1,0 +1,146 @@
+{
+  "timestamp": "2026-05-23T08:01:21.446661+00:00",
+  "agent_id": "agent_codex_primary",
+  "created_dirs": [
+    "blackboard\\history",
+    "blackboard\\state",
+    "blackboard\\agents",
+    "blackboard\\knowledge",
+    "blackboard\\artifacts",
+    "blackboard\\errors",
+    "blackboard\\locks",
+    "blackboard\\logs",
+    "blackboard\\agents\\agent_codex_primary",
+    "blackboard\\agents\\agent_codex_primary\\checkpoints",
+    "blackboard\\agents\\agent_codex_primary\\temporary_artifacts"
+  ],
+  "created_files": [
+    "blackboard\\history\\global_history.json",
+    "blackboard\\history\\event_stream.json",
+    "blackboard\\history\\audit_log.json",
+    "blackboard\\state\\state.json",
+    "blackboard\\state\\task_index.json",
+    "blackboard\\state\\dependency_graph.json",
+    "blackboard\\state\\active_context.json",
+    "blackboard\\knowledge\\knowledge.json",
+    "blackboard\\knowledge\\patterns.json",
+    "blackboard\\knowledge\\lessons.json",
+    "blackboard\\knowledge\\semantic_memory.json",
+    "blackboard\\errors\\failures.json",
+    "blackboard\\errors\\crash_reports.json",
+    "blackboard\\errors\\recovery_log.json",
+    "blackboard\\locks\\task_locks.json",
+    "blackboard\\locks\\resource_locks.json",
+    "blackboard\\logs\\system.log",
+    "blackboard\\agents\\agent_codex_primary\\workspace.json",
+    "blackboard\\agents\\agent_codex_primary\\local_memory.json",
+    "blackboard\\agents\\agent_codex_primary\\execution_notes.json"
+  ],
+  "updated_files": [
+    "blackboard\\agents\\agent_codex_primary\\workspace.json",
+    "blackboard\\history\\audit_log.json",
+    "blackboard\\history\\event_stream.json",
+    "blackboard\\history\\global_history.json",
+    "blackboard\\state\\active_context.json",
+    "blackboard\\state\\state.json"
+  ],
+  "json_integrity": [
+    {
+      "file": "blackboard\\errors\\crash_reports.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\errors\\failures.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\errors\\recovery_log.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\history\\audit_log.json",
+      "status": "ok",
+      "type": "list"
+    },
+    {
+      "file": "blackboard\\history\\event_stream.json",
+      "status": "ok",
+      "type": "list"
+    },
+    {
+      "file": "blackboard\\history\\global_history.json",
+      "status": "ok",
+      "type": "list"
+    },
+    {
+      "file": "blackboard\\knowledge\\knowledge.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\knowledge\\lessons.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\knowledge\\patterns.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\knowledge\\semantic_memory.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\locks\\resource_locks.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\locks\\task_locks.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\state\\active_context.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\state\\dependency_graph.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\state\\state.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\state\\task_index.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\agents\\agent_codex_primary\\execution_notes.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\agents\\agent_codex_primary\\local_memory.json",
+      "status": "ok",
+      "type": "dict"
+    },
+    {
+      "file": "blackboard\\agents\\agent_codex_primary\\workspace.json",
+      "status": "ok",
+      "type": "dict"
+    }
+  ],
+  "detected_conflicts": [],
+  "recovery_mode": false
+}

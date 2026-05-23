@@ -1,313 +1,222 @@
-# Parallel Memory System
+# Parallel Memory
 
-A psychologically-informed AI system that tracks how users' memories evolve over time, detects emotional and narrative distortions, and generates alternate life timeline simulations.
+Parallel Memory is an AI/ML system for psychological memory analysis:
+- tracks how a user’s memory changes over time
+- detects narrative/emotional drift between original memory and later recall
+- generates alternate timeline simulations
+- learns from feedback across users while keeping user data separated
 
-## Core Concept
+## 1. Current Project Status
 
-Humans don't store memories like recordings — every recall changes details, emotions shift, and missing parts get reconstructed. **Parallel Memory** combines memory distortion psychology with AI-generated alternate timeline simulations into one unified system.
+Implemented now:
+- Multi-user backend scaffold with FastAPI
+- Per-user isolated storage
+- Global anonymized feedback aggregation
+- Drift-analysis + timeline pipeline placeholders
+- Retrain trigger candidate builder
+- Blackboard memory protocol files
+- `UNIFIED_LOG.json` orchestration brain
 
-## Features
+Planned next:
+- Hugging Face routed LLM stack (fast + strong model)
+- RAG retrieval layer
+- Guardrails/safety layer
+- PostgreSQL + vector DB migration
 
-- **Memory Embedding & Drift Detection** — Detects semantic and emotional changes between original memory and recall
-- **Neural Network-Powered Confidence Scoring** — Estimates reliability of memory recall over time
-- **Emotion Classification** — Categorizes emotional tone (regret, nostalgia, sadness, joy, etc.)
-- **Alternate Timeline Generation** — Simulates counterfactual life branches from decision points
-- **User Feedback Loop** — Collects corrections to continuously improve models
-- **Auto-Retraining** — LoRA fine-tuning on aggregated negative feedback samples
-- **Colab-Ready** — Runs entirely in Google Colab with GPU acceleration
-- **GitHub-Integrated** — Auto-commits model artifacts and results to GitHub
+## 2. Repository Structure
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | FastAPI + REST API |
-| Backend | Python 3.10+ |
-| Storage | SQLite (per-user + global) |
-| Embeddings | SentenceTransformer (all-MiniLM-L6-v2) |
-| Neural Networks | PyTorch (MemoryDriftNN, ConfidenceScorer, EmotionClassifier) |
-| LLM | TinyLlama with LoRA fine-tuning |
-| Orchestration | LangGraph (optional) |
-| ML Tooling | Hugging Face Transformers, PEFT, Accelerate |
-| Monitoring | Weights & Biases (optional) |
-| Execution | Google Colab (primary) |
-
-## Installation
-
-### Local Development
-
-```bash
-git clone https://github.com/Aditya2005-cloud/PARALLER-MEMORY.git
-cd PARALLER_MEMORY
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create data directories
-mkdir -p data/users data/global logs models checkpoints
+```text
+PARALLER_MEMORY/
+  parallel_memory/
+    api.py
+    config.py
+    models.py
+    pipeline.py
+    retraining.py
+    storage.py
+  data/
+    users/
+    global/
+  blackboard/
+    UNIFIED_LOG.json
+    ...
+  architecture.md
+  requirements.txt
 ```
 
-### Google Colab
+## 3. Data/Infra Design
 
-1. Open [Google Colab](https://colab.research.google.com)
-2. Go to `File` → `Open notebook` → `GitHub`
-3. Enter: `Aditya2005-cloud/PARALLER-MEMORY`
-4. Select `colab_parallel_memory.ipynb`
-5. Run cells sequentially
+### Per-user storage (isolated)
+- Path: `data/users/<user_id>/`
+- Files:
+  - `memories/memory_<id>.json`
+  - `recalls/recall_<memory_id>_<timestamp>.json`
+  - `timelines/timeline_<memory_id>_<timestamp>.json`
+  - `feedback/feedback_<timestamp>.json`
 
-## Quick Start
+### Global learning aggregation
+- Path: `data/global/`
+- Files:
+  - `feedback_aggregate.jsonl` (anonymized learning stream)
+  - `retrain_candidates.jsonl` (negative samples for retrain prep)
 
-### 1. Local API Server
+## 4. Install and Run (Local)
 
+## Requirements
+- Python 3.10+
+
+## Setup
+```bash
+pip install -r requirements.txt
+```
+
+## Start API
 ```bash
 uvicorn parallel_memory.api:app --reload --port 8000
 ```
 
-Visit http://localhost:8000/docs for API documentation.
+Open docs:
+- `http://127.0.0.1:8000/docs`
 
-### 2. Submit a Memory
+## 5. End-to-End API Flow
 
+## Step 1: Store original memory
 ```bash
-curl -X POST http://localhost:8000/memories \
+curl -X POST "http://127.0.0.1:8000/memories" \
   -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user_123",
-    "memory_text": "In 2022 I rejected a music scholarship for engineering",
-    "emotion": "uncertain",
-    "confidence": 0.65
-  }'
+  -d "{\"user_id\":\"user_123\",\"memory_text\":\"In 2022 I rejected a music scholarship for engineering.\",\"emotion\":\"conflict\",\"confidence\":0.72,\"metadata\":{\"year\":2022}}"
 ```
 
-### 3. Recall & Detect Drift
+Response returns `memory_id`.
 
+## Step 2: Submit later recall and generate analysis
 ```bash
-curl -X POST http://localhost:8000/recalls \
+curl -X POST "http://127.0.0.1:8000/recalls" \
   -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user_123",
-    "memory_id": "<returned_memory_id>",
-    "recall_text": "I was forced to reject music because of family pressure",
-    "emotion": "regret",
-    "confidence": 0.4
-  }'
+  -d "{\"user_id\":\"user_123\",\"memory_id\":\"<memory_id>\",\"recall_text\":\"I was forced to reject music and felt regret.\",\"emotion\":\"regret\",\"confidence\":0.55}"
 ```
 
-**Response includes:**
-- Semantic drift score (0-1): how much the meaning changed
-- Emotion shift score (0-1): emotional tone change
-- Omitted/added keywords: what changed in the telling
-- 3 alternate timeline branches
+Response includes:
+- drift scores
+- added/omitted keywords
+- alternate timeline simulation object
 
-### 4. Submit Feedback
-
+## Step 3: Log feedback
 ```bash
-curl -X POST http://localhost:8000/feedback \
+curl -X POST "http://127.0.0.1:8000/feedback" \
   -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user_123",
-    "memory_id": "<memory_id>",
-    "response_id": "<response_id>",
-    "rating": 0.2,
-    "correction": "The drift analysis was too aggressive",
-    "notes": "Model underestimated emotional continuity"
-  }'
+  -d "{\"user_id\":\"user_123\",\"memory_id\":\"<memory_id>\",\"response_id\":\"resp_001\",\"rating\":0,\"correction\":\"I was uncertain, not fully forced.\",\"notes\":\"Tone too absolute.\"}"
 ```
 
-## Architecture
+This stores user feedback and appends anonymized global learning row.
 
-### Database Schema
-
-**Per-user database** (`data/users/{user_id}.db`):
-- `memories` — original memory submissions
-- `embeddings` — cached 384-dim vectors
-- `recalls` — re-tellings with detected drift
-- `timelines` — alternate scenario branches
-- `feedback` — user corrections
-- `exceptions` — errors for debugging
-
-**Global database** (`data/global.db`):
-- `global_feedback` — anonymized, aggregated feedback
-- `retrain_log` — model training history
-
-### Pipeline Flow
-
-```
-User Input
-    ↓
-Embedding (SentenceTransformer)
-    ↓
-Drift Detection NN + Emotion Classifier
-    ↓
-Confidence Scoring NN
-    ↓
-Alternate Timeline Generation
-    ↓
-Database Storage
-    ↓
-User Feedback Loop
-    ↓
-Auto-Retrain (when threshold hit)
+## Step 4: Check global learning status
+```bash
+curl "http://127.0.0.1:8000/global/summary"
 ```
 
-## Neural Network Models
+## Step 5: Build retrain candidates
+```bash
+curl -X POST "http://127.0.0.1:8000/global/retrain-check?min_negative=20"
+```
 
-### MemoryDriftNN
-- **Input**: Previous embedding (384D) + current embedding (384D)
-- **Output**: Semantic drift score, emotion drift score (both 0-1)
-- **Architecture**: LSTM + Attention + Dense layers
-- **Training**: Supervised on user-labeled drift annotations
+## 6. Available Endpoints
 
-### ConfidenceScorer
-- **Input**: Memory embedding + recall count + days old + text length
-- **Output**: Confidence score (0-1, higher = more reliable)
-- **Architecture**: Multi-layer perceptron
-- **Training**: User feedback ratings map to confidence labels
+- `GET /health`
+- `POST /memories`
+- `POST /recalls`
+- `POST /feedback`
+- `GET /global/summary`
+- `POST /global/retrain-check`
 
-### EmotionClassifier
-- **Input**: Text embedding (384D)
-- **Output**: Probability distribution over 8 emotions
-- **Classes**: joy, sadness, regret, acceptance, nostalgia, anger, shame, pride
-- **Architecture**: Dense network with softmax
-- **Training**: User emotion labels from recalled memories
+## 7. Blackboard System
 
-## Data Migration
+Two orchestration layers now exist:
 
-Existing JSON files are automatically migrated to SQLite:
+1. Structured blackboard folders (`blackboard/history`, `state`, `agents`, ...)
+2. Unified protocol file:
+   - `blackboard/UNIFIED_LOG.json`
+
+`UNIFIED_LOG.json` tracks:
+- meta summary and health
+- status board
+- tasks
+- checkpoints
+- knowledge
+- improvements
+- failures
+- event log
+
+If you resume work later, start by reading `blackboard/UNIFIED_LOG.json`.
+
+## 8. Notebook Notes
+
+Notebook file:
+- `parallel_memory_feedback_loop.ipynb`
+
+Recent fixes already applied:
+- corruption/merge-marker cleanup
+- removed mandatory Google Drive dependency
+- Hugging Face loading fallback for quantized/non-quantized model loading
+- optional GitHub artifact save flow
+
+## 9. What Is Placeholder vs Production
+
+Currently placeholder:
+- drift scoring heuristic in `parallel_memory/pipeline.py`
+- alternate timeline generation in `parallel_memory/pipeline.py`
+
+Production direction:
+- sentence embeddings + learned drift model
+- routed Hugging Face LLMs
+- RAG memory retrieval
+- guardrails and confidence calibration
+
+## 10. Next Implementation Plan
+
+1. Implement `T-003`: Hugging Face routed LLM + RAG integration.
+2. Add retrieval index for user memories.
+3. Add guardrails policy checks and simulation labeling.
+4. Move persistence from file-based JSON/JSONL to PostgreSQL + vector DB.
+5. Add test coverage for router and feedback-learning path.
+
+## 11. Quick Verification Script (Optional)
 
 ```python
-from parallel_memory.migration import MigrationManager
+from parallel_memory.storage import create_memory, save_feedback
+from parallel_memory.pipeline import process_recall_and_simulation
+from parallel_memory.retraining import global_summary
 
-migration = MigrationManager()
-results = migration.run_full_migration(users=["user_1", "user_2"])
-migration.archive_json_files()
-```
+m = create_memory("demo_user", {
+    "memory_text": "I declined an art scholarship in 2021.",
+    "emotion": "conflicted",
+    "confidence": 0.7,
+    "metadata": {"year": 2021}
+})
 
-## Retraining Pipeline
-
-Models retrain automatically when:
-- ≥20 negative feedback samples accumulated
-- ≥30% negative ratio in recent 50 responses
-- ≥10 unresolved exceptions
-- 7+ days since last retraining
-
-Check retrain status:
-
-```bash
-curl http://localhost:8000/global/retrain-check
-```
-
-## Error Handling
-
-All failures are caught and logged:
-
-```python
-from parallel_memory.exceptions import (
-    MemoryError,
-    EmbeddingError,
-    ModelInferenceError,
-    DatabaseError,
-    UserValidationError
+result = process_recall_and_simulation(
+    "demo_user",
+    m["memory_id"],
+    "I felt pressured and still regret it.",
+    "regret",
+    0.5
 )
+
+save_feedback("demo_user", {
+    "memory_id": m["memory_id"],
+    "response_id": "resp_demo",
+    "rating": 0,
+    "correction": "Confidence should be lower."
+})
+
+print(result["drift"])
+print(global_summary())
 ```
 
-Fallbacks:
-- Embedding failures → keyword similarity fallback
-- Model load failures → fresh model initialization
-- GPU OOM → automatic CPU fallback
-- Database locks → exponential backoff + retry
+## 12. Ethics Defaults
 
-## Logging
+- Simulations must be labeled as speculative.
+- System should not claim objective truth about memory.
+- Confidence outputs are probabilistic.
+- Keep user-level memory data isolated from other users.
 
-Logs written to `logs/parallel_memory_*.log`:
-
-```python
-import logging
-logger = logging.getLogger("parallel_memory")
-logger.info("Your message here")
-```
-
-## Testing
-
-Run tests locally:
-
-```bash
-pytest tests/ -v --cov=parallel_memory
-```
-
-## Colab Deployment
-
-1. **Mount GitHub token** (for auto-commits):
-   ```python
-   from google.colab import userdata
-   github_token = userdata.get('GITHUB_TOKEN')
-   os.environ['GITHUB_TOKEN'] = github_token
-   ```
-
-2. **Run notebook cells** in order (setup → training → test → commit)
-
-3. **Check GitHub** for committed model weights and results.json
-
-## API Endpoints
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/health` | Health check |
-| POST | `/memories` | Store new memory |
-| POST | `/recalls` | Process recall + drift detection |
-| POST | `/feedback` | Log user feedback |
-| GET | `/user/{user_id}/memories` | List user's memories |
-| GET | `/user/{user_id}/feedback-stats` | Get user feedback stats |
-| GET | `/global/summary` | Aggregate feedback stats |
-| POST | `/global/retrain-check` | Check if retraining triggered |
-| GET | `/errors` | Recent error logs |
-
-## Performance
-
-On T4 GPU (Colab):
-- Memory embedding: ~50ms per text
-- Drift detection: ~200ms per recall
-- Timeline generation: ~300ms per memory
-- Full pipeline (recall → timeline): ~1s
-
-## Safety & Ethics
-
-- All alternate timelines labeled "AI Simulation"
-- Confidence scores are probabilistic, never claim truth
-- No attempts to suppress or maximize particular emotions
-- User retains full control over data
-- No external API calls (runs fully local/Colab)
-
-## Future Roadmap
-
-- [ ] Fine-tune TinyLlama on user corpus (curriculum learning)
-- [ ] Add regret trajectory visualization (Matplotlib/Plotly)
-- [ ] Implement RAG for memory context retrieval
-- [ ] Multi-user collaboration features
-- [ ] React frontend with branching timeline UI
-- [ ] Mobile app (React Native)
-- [ ] Publish research paper on memory distortion patterns
-
-## Contributing
-
-We welcome contributions! Areas of interest:
-- Improved memory drift detection algorithms
-- Better timeline generation heuristics
-- Expanded emotion classification
-- Frontend UI/UX
-- Testing & documentation
-
-## License
-
-This project is open-source. See LICENSE file.
-
-## Authors
-
-- Aditya2005-cloud
-
-## Support
-
-Questions? Open an issue on GitHub or check the API docs at `http://localhost:8000/docs`
-
----
-
-**Remember**: This system is designed to help you *understand* your memories better, not to claim objective truth about them. Memories are reconstructed every time we recall them — that's not a bug, it's a feature of human cognition.
