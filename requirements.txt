@@ -1,9 +1,9 @@
 fastapi==0.116.1
 uvicorn==0.35.0
 pydantic==2.11.7
-torch==2.1.1
-torchvision==0.16.1
-torchaudio==2.1.1
+torch>=2.2.0,<2.13.0
+torchvision>=0.17.0,<0.28.0
+torchaudio>=2.2.0,<2.13.0
 transformers==4.35.2
 sentence-transformers==2.2.2
 datasets==2.14.5
