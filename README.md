@@ -220,3 +220,4 @@ print(global_summary())
 - Confidence outputs are probabilistic.
 - Keep user-level memory data isolated from other users.
 
+<img width="324" height="511" alt="{A42E0AF6-C6A4-45B2-B460-BFB58084AF19}" src="https://github.com/user-attachments/assets/8f5abf37-8526-458f-912a-6baa9163faf7" />
