@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from uuid import uuid4
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +15,18 @@ from .colab_utils import setup_logging
 logger = logging.getLogger("parallel_memory.api")
 setup_logging()
 
-app = FastAPI(title="Parallel Memory API", version="0.2.0")
+
+_pipeline_cache: dict[str, object] = {}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Parallel Memory API starting up")
+    yield
+    logger.info("Parallel Memory API shutting down")
+
+
+app = FastAPI(title="Parallel Memory API", version="0.2.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,14 +55,38 @@ def get_pipeline(user_id: str):
     return engine
 
 
-@app.on_event("startup")
-def startup() -> None:
-    logger.info("Parallel Memory API starting up")
-
 
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "version": "0.2.0"}
+
+
+@app.get("/health/deep")
+def health_deep() -> dict:
+    """Deep health: DB schema + embedding model + GPU VRAM readiness."""
+    issues = []
+    device_info: dict = {}
+    try:
+        gdb = GlobalDatabaseManager()
+        gdb.get_feedback_stats()
+    except Exception as exc:
+        issues.append(f"global_db: {exc}")
+    try:
+        from .embeddings import EmbeddingManager
+        em = EmbeddingManager()
+        em.embed_text("health check")
+        model_status = "loaded" if em.model is not None else "fallback"
+        device_info = em.device_info()
+    except Exception as exc:
+        issues.append(f"embeddings: {exc}")
+        model_status = "error"
+    return {
+        "status": "ok" if not issues else "degraded",
+        "version": "0.2.0",
+        "embedding_model": model_status,
+        "device": device_info,
+        "issues": issues,
+    }
 
 
 @app.post("/memories")

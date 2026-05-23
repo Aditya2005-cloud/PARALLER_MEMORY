@@ -170,8 +170,8 @@ class PipelineEngine:
                 embedding_tensor = torch.tensor(embedding, dtype=torch.float32).unsqueeze(0)
                 emotion_dist = self.emotion_model(embedding_tensor[0])
                 return emotion_dist
-        except Exception as e:
-            logger.warning(f"Emotion classification failed: {e}")
+        except Exception as exc:
+            logger.warning(f"Emotion classification failed: {exc}")
             return {e: 1.0 / len(EmotionClassifier.emotions) for e in EmotionClassifier.emotions}
 
     def _extract_omitted_keywords(self, original: str, recall: str) -> list[str]:

@@ -308,6 +308,8 @@ class DatabaseManager:
                 "memory_id": memory_id,
                 "response_id": response_id,
                 "rating": rating,
+                "correction": correction,
+                "notes": notes,
                 "created_at": now,
             }
 

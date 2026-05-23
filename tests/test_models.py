@@ -1,6 +1,7 @@
 import pytest
-import torch
 import numpy as np
+
+torch = pytest.importorskip("torch", reason="PyTorch not installed — skipping ML model tests")
 
 from parallel_memory.models_ml import (
     MemoryDriftNN,

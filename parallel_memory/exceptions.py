@@ -2,10 +2,14 @@ class ParallelMemoryError(Exception):
     base_error_class = True
 
 
-class MemoryError(ParallelMemoryError):
+class MemoryNotFoundError(ParallelMemoryError):
     def __init__(self, message: str, memory_id: str = None):
         self.memory_id = memory_id
         super().__init__(message)
+
+
+# Backward-compatible alias — avoids shadowing Python builtin MemoryError
+MemoryError = MemoryNotFoundError  # noqa: F811
 
 
 class EmbeddingError(ParallelMemoryError):

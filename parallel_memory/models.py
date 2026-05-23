@@ -24,7 +24,6 @@ class FeedbackIn(BaseModel):
     user_id: str
     memory_id: str
     response_id: str
-    rating: int = Field(ge=0, le=1)
+    rating: float = Field(ge=0.0, le=1.0)   # float, not int — supports 0.25, 0.9 etc.
     correction: str | None = None
     notes: str | None = None
-
