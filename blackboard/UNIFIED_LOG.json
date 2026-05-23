@@ -1,17 +1,18 @@
 {
   "meta": {
     "project": "Parallel Memory",
-    "version": 1,
+    "version": 2,
     "created_at": "2026-05-23T08:08:34.582495+00:00",
-    "last_updated": "2026-05-23T08:08:34.582495+00:00",
+    "last_updated": "2026-05-23T08:46:53.235839+00:00",
     "last_agent": "agent_codex_primary",
     "health": "healthy",
-    "summary": "Parallel Memory scaffold is synchronized in UNIFIED_LOG: blackboard initialized, multi-user pipeline completed, and routed LLM+RAG integration queued as next high-priority task."
+    "summary": "System stabilized for Colab serving: API startup hardened with lazy loading and fallback behavior; dependency profile optimized to reduce runtime conflicts."
   },
   "status_board": {
     "completed": [
       "T-001",
-      "T-002"
+      "T-002",
+      "T-004"
     ],
     "in_progress": [],
     "blocked": [],
@@ -20,7 +21,8 @@
     ],
     "needs_improvement": [
       "IMP-1",
-      "IMP-2"
+      "IMP-2",
+      "IMP-3"
     ],
     "abandoned": []
   },
@@ -102,6 +104,36 @@
       "why_it_failed": "",
       "retry_count": 0,
       "artifacts": []
+    },
+    {
+      "task_id": "T-004",
+      "title": "Colab runtime stabilization and dependency optimization",
+      "description": "Harden API startup and reduce Colab dependency conflicts to avoid server crashes/connection refused errors.",
+      "status": "completed",
+      "priority": "critical",
+      "assigned_to": "agent_codex_primary",
+      "created_at": "2026-05-23T08:46:53.235839+00:00",
+      "updated_at": "2026-05-23T08:46:53.235839+00:00",
+      "completed_at": "2026-05-23T08:46:53.235839+00:00",
+      "depends_on": [
+        "T-001",
+        "T-002"
+      ],
+      "blocks": [],
+      "completion_pct": 100,
+      "what_was_done": "Implemented lazy pipeline cache in API, fallback-safe embeddings and pipeline behavior when heavy ML deps are unavailable, created colab-safe requirements, and corrected colab utility repo/dependency logic.",
+      "what_remains": "Optional: wire full routed LLM+RAG stack (T-003).",
+      "how_to_improve": "Add automated smoke test in CI for API startup.",
+      "why_it_failed": "",
+      "retry_count": 0,
+      "artifacts": [
+        "README.md",
+        "parallel_memory/api.py",
+        "parallel_memory/colab_utils.py",
+        "parallel_memory/embeddings.py",
+        "parallel_memory/pipeline.py",
+        "requirements-colab.txt"
+      ]
     }
   ],
   "checkpoints": [
@@ -122,17 +154,42 @@
       ],
       "discoveries": "Single-file blackboard can track orchestration reliably when status_board and checkpoints are kept current.",
       "next_recommended_action": "Implement T-003 routed Hugging Face LLM + RAG integration with evaluation hooks."
+    },
+    {
+      "checkpoint_id": "CK-002",
+      "agent_id": "agent_codex_primary",
+      "timestamp": "2026-05-23T08:46:53.235839+00:00",
+      "snapshot_summary": "Colab startup stability improved; API is resilient to missing heavy deps and reduced resolver conflicts.",
+      "tasks_completed_since_last": [
+        "T-004"
+      ],
+      "tasks_started_since_last": [],
+      "files_changed": [
+        "parallel_memory/api.py",
+        "parallel_memory/pipeline.py",
+        "parallel_memory/embeddings.py",
+        "parallel_memory/colab_utils.py",
+        "requirements-colab.txt",
+        "README.md",
+        "blackboard/UNIFIED_LOG.json"
+      ],
+      "discoveries": "Dependency minimization and lazy initialization are the highest-impact stability improvements for Colab runtime.",
+      "next_recommended_action": "Implement T-003 routed HF LLM + RAG, keeping lazy-load patterns and optional extras split."
     }
   ],
   "knowledge_base": {
     "solutions": [
-      "Unified blackboard protocol can coexist with project code by using a single source file UNIFIED_LOG.json as runtime memory."
+      "Unified blackboard protocol can coexist with project code by using a single source file UNIFIED_LOG.json as runtime memory.",
+      "Avoid eager heavy-model imports in API startup; lazy load + cache per-user pipeline engines."
     ],
     "patterns": [
-      "Per-user isolated folders + anonymized global feedback stream supports privacy with shared model learning."
+      "Per-user isolated folders + anonymized global feedback stream supports privacy with shared model learning.",
+      "Use a minimal Colab requirements profile for serving APIs; install finetuning extras separately."
     ],
     "antipatterns": [],
-    "lessons_learned": [],
+    "lessons_learned": [
+      "Most Colab connection-refused incidents were process startup failures after dependency resolver downgrades."
+    ],
     "architecture_decisions": [
       "Task sequencing: bootstrap state -> multi-user data plane -> routed LLM+RAG execution plane."
     ]
@@ -153,6 +210,14 @@
       "priority": "high",
       "proposed_by": "agent_codex_primary",
       "status": "open"
+    },
+    {
+      "area": "observability",
+      "current_state": "Basic health endpoint only",
+      "proposed_improvement": "Add `/health/deep` endpoint that checks pipeline and DB readiness to debug startup quickly.",
+      "priority": "medium",
+      "proposed_by": "agent_codex_primary",
+      "status": "open"
     }
   ],
   "agents": [
@@ -160,13 +225,15 @@
       "agent_id": "agent_codex_primary",
       "type": "execution_node",
       "status": "active",
-      "last_active": "2026-05-23T08:08:34.582495+00:00",
+      "last_active": "2026-05-23T08:46:53.235839+00:00",
       "tasks_owned": [
         "T-001",
-        "T-002"
+        "T-002",
+        "T-004"
       ],
       "contributions": [
-        "Updated unified state and checkpoint CK-001 at 2026-05-23T08:08:34.582495+00:00"
+        "Updated unified state and checkpoint CK-001 at 2026-05-23T08:08:34.582495+00:00",
+        "Completed T-004 and checkpoint CK-002 at 2026-05-23T08:46:53.235839+00:00"
       ]
     }
   ],
@@ -224,6 +291,42 @@
       "type": "checkpoint",
       "task_id": "",
       "summary": "Created checkpoint CK-001.",
+      "impact": "medium"
+    },
+    {
+      "event_id": "EV-0007",
+      "timestamp": "2026-05-23T08:46:53.235839+00:00",
+      "agent_id": "agent_codex_primary",
+      "type": "task_completed",
+      "task_id": "T-004",
+      "summary": "Completed Colab stability hardening and dependency optimization.",
+      "impact": "high"
+    },
+    {
+      "event_id": "EV-0008",
+      "timestamp": "2026-05-23T08:46:53.235839+00:00",
+      "agent_id": "agent_codex_primary",
+      "type": "discovery",
+      "task_id": "",
+      "summary": "Confirmed lazy-loading and minimal dependency profile reduce startup failures.",
+      "impact": "medium"
+    },
+    {
+      "event_id": "EV-0009",
+      "timestamp": "2026-05-23T08:46:53.235839+00:00",
+      "agent_id": "agent_codex_primary",
+      "type": "improvement_noted",
+      "task_id": "",
+      "summary": "Logged deep-health endpoint improvement for observability.",
+      "impact": "low"
+    },
+    {
+      "event_id": "EV-0010",
+      "timestamp": "2026-05-23T08:46:53.235839+00:00",
+      "agent_id": "agent_codex_primary",
+      "type": "checkpoint",
+      "task_id": "",
+      "summary": "Created checkpoint CK-002.",
       "impact": "medium"
     }
   ]

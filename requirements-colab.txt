@@ -1,0 +1,23 @@
+fastapi==0.116.1
+uvicorn==0.35.0
+pydantic==2.11.7
+
+# Keep torch flexible for Colab Python/CUDA variants
+torch>=2.2.0,<2.13.0
+torchvision>=0.17.0,<0.28.0
+torchaudio>=2.2.0,<2.13.0
+
+# NLP/ML stack
+transformers==4.35.2
+sentence-transformers==2.2.2
+peft==0.7.1
+accelerate==0.24.1
+
+# Data stack (compatible with Python 3.12 wheels)
+numpy>=1.26,<3.0
+scipy>=1.11,<2.0
+scikit-learn>=1.4,<2.0
+
+# Utilities
+GitPython==3.1.40
+python-dotenv==1.0.0

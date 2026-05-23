@@ -70,6 +70,16 @@ PARALLER_MEMORY/
 pip install -r requirements.txt
 ```
 
+For Google Colab, use:
+```bash
+pip install -r requirements-colab.txt
+```
+
+Optional (only if you need LoRA 4-bit finetuning in notebook):
+```bash
+pip install bitsandbytes datasets wandb
+```
+
 ## Start API
 ```bash
 uvicorn parallel_memory.api:app --reload --port 8000
@@ -159,6 +169,9 @@ Recent fixes already applied:
 - removed mandatory Google Drive dependency
 - Hugging Face loading fallback for quantized/non-quantized model loading
 - optional GitHub artifact save flow
+- API now uses lazy pipeline loading + cached model instances to reduce repeated heavy initialization
+- graceful fallback mode if heavy ML deps are unavailable (service stays up)
+- Colab dependency set reduced to avoid common resolver conflicts that crash/restart runtimes
 
 ## 9. What Is Placeholder vs Production
 
@@ -219,4 +232,3 @@ print(global_summary())
 - System should not claim objective truth about memory.
 - Confidence outputs are probabilistic.
 - Keep user-level memory data isolated from other users.
-

@@ -1,15 +1,28 @@
 import logging
-import torch
 import numpy as np
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+try:
+    import torch
+except Exception:
+    torch = None
+
 from .database import DatabaseManager
 from .embeddings import EmbeddingManager
-from .models_ml import MemoryDriftNN, ConfidenceScorer, EmotionClassifier, ModelStorage
 from .exceptions import ModelInferenceError, EmbeddingError, MemoryError
 
 logger = logging.getLogger("parallel_memory.pipeline")
+
+try:
+    from .models_ml import MemoryDriftNN, ConfidenceScorer, EmotionClassifier, ModelStorage
+except Exception:
+    MemoryDriftNN = None
+    ConfidenceScorer = None
+    ModelStorage = None
+
+    class EmotionClassifier:  # type: ignore[no-redef]
+        emotions = ["joy", "sadness", "regret", "acceptance", "nostalgia", "anger", "shame", "pride"]
 
 
 @dataclass
@@ -22,30 +35,50 @@ class DriftResult:
 
 
 class PipelineEngine:
+    _embedding_managers: dict[str, EmbeddingManager] = {}
+    _loaded_models: dict[tuple[str, str], object] = {}
+
     def __init__(self, user_id: str, device: str = "cpu", model_version: str = "1.0"):
         self.user_id = user_id
         self.device = device
         self.model_version = model_version
 
         self.db = DatabaseManager(user_id)
-        self.embedding_manager = EmbeddingManager(device=device)
-        self.model_storage = ModelStorage()
+        em_key = f"{device}"
+        if em_key not in self._embedding_managers:
+            self._embedding_managers[em_key] = EmbeddingManager(device=device)
+        self.embedding_manager = self._embedding_managers[em_key]
+        self.model_storage = ModelStorage() if ModelStorage is not None else None
 
-        self.drift_model = self._load_model("drift", MemoryDriftNN)
-        self.confidence_model = self._load_model("confidence", ConfidenceScorer)
-        self.emotion_model = self._load_model("emotion", EmotionClassifier)
+        if torch is None or self.model_storage is None or MemoryDriftNN is None or ConfidenceScorer is None:
+            self.drift_model = None
+            self.confidence_model = None
+            self.emotion_model = None
+        else:
+            self.drift_model = self._load_model("drift", MemoryDriftNN)
+            self.confidence_model = self._load_model("confidence", ConfidenceScorer)
+            self.emotion_model = self._load_model("emotion", EmotionClassifier)
 
     def _load_model(self, model_type: str, model_class):
+        cache_key = (model_type, self.model_version)
+        if cache_key in self._loaded_models:
+            return self._loaded_models[cache_key]
         try:
             if model_type == "drift":
-                return self.model_storage.load_drift_model(self.model_version)
+                model = self.model_storage.load_drift_model(self.model_version)
             elif model_type == "confidence":
-                return self.model_storage.load_confidence_model(self.model_version)
+                model = self.model_storage.load_confidence_model(self.model_version)
             elif model_type == "emotion":
-                return self.model_storage.load_emotion_model(self.model_version)
+                model = self.model_storage.load_emotion_model(self.model_version)
+            else:
+                model = model_class()
+            self._loaded_models[cache_key] = model
+            return model
         except Exception as e:
             logger.warning(f"Failed to load {model_type} model: {e}, creating fresh")
-            return model_class()
+            model = model_class()
+            self._loaded_models[cache_key] = model
+            return model
 
     def embed_text(self, text: str) -> np.ndarray:
         try:
@@ -71,11 +104,14 @@ class PipelineEngine:
 
             curr_embedding = self.embed_text(recall_text)
 
-            with torch.no_grad():
-                prev_tensor = torch.tensor(prev_embedding, dtype=torch.float32).unsqueeze(0)
-                curr_tensor = torch.tensor(curr_embedding, dtype=torch.float32).unsqueeze(0)
-
-                semantic_drift, emotion_drift = self.drift_model(prev_tensor[0], curr_tensor[0])
+            if torch is None or self.drift_model is None:
+                semantic_drift = float(1.0 - self.embedding_manager.compute_similarity(prev_embedding, curr_embedding))
+                emotion_drift = min(1.0, semantic_drift * 0.8)
+            else:
+                with torch.no_grad():
+                    prev_tensor = torch.tensor(prev_embedding, dtype=torch.float32).unsqueeze(0)
+                    curr_tensor = torch.tensor(curr_embedding, dtype=torch.float32).unsqueeze(0)
+                    semantic_drift, emotion_drift = self.drift_model(prev_tensor[0], curr_tensor[0])
 
             emotion_distribution = self._classify_emotion(curr_embedding)
 
@@ -111,9 +147,14 @@ class PipelineEngine:
 
             text_length = len(memory.get("text", "").split())
 
-            with torch.no_grad():
-                embedding_tensor = torch.tensor(embedding, dtype=torch.float32).unsqueeze(0)
-                confidence = self.confidence_model(embedding_tensor[0], recall_count, days_old, text_length)
+            if torch is None or self.confidence_model is None:
+                base = 0.75
+                penalty = min(0.5, recall_count * 0.03 + days_old * 0.002)
+                confidence = max(0.1, base - penalty)
+            else:
+                with torch.no_grad():
+                    embedding_tensor = torch.tensor(embedding, dtype=torch.float32).unsqueeze(0)
+                    confidence = self.confidence_model(embedding_tensor[0], recall_count, days_old, text_length)
 
             return round(min(1.0, max(0.0, confidence)), 4)
 
@@ -123,10 +164,12 @@ class PipelineEngine:
 
     def _classify_emotion(self, embedding: np.ndarray) -> dict:
         try:
+            if torch is None or self.emotion_model is None:
+                return {e: 1.0 / len(EmotionClassifier.emotions) for e in EmotionClassifier.emotions}
             with torch.no_grad():
                 embedding_tensor = torch.tensor(embedding, dtype=torch.float32).unsqueeze(0)
                 emotion_dist = self.emotion_model(embedding_tensor[0])
-            return emotion_dist
+                return emotion_dist
         except Exception as e:
             logger.warning(f"Emotion classification failed: {e}")
             return {e: 1.0 / len(EmotionClassifier.emotions) for e in EmotionClassifier.emotions}
@@ -245,4 +288,3 @@ class PipelineEngine:
         except Exception as e:
             logger.error(f"Recall processing failed: {e}")
             raise
-

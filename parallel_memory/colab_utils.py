@@ -45,28 +45,26 @@ class ColabEnvironment:
 
     def _install_dependencies(self):
         logger.info("Installing dependencies...")
-        packages = [
-            "torch",
-            "transformers",
-            "sentence-transformers",
-            "datasets",
-            "peft",
-            "accelerate",
-            "bitsandbytes",
-            "GitPython",
-            "wandb",
-        ]
-
-        for package in packages:
-            try:
+        req_file = self.repo_root / "requirements-colab.txt"
+        try:
+            if req_file.exists():
                 subprocess.run(
-                    [sys.executable, "-m", "pip", "install", "-q", package],
+                    [sys.executable, "-m", "pip", "install", "-q", "-r", str(req_file)],
                     check=True,
                     capture_output=True
                 )
-                logger.info(f"Installed: {package}")
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Failed to install {package}: {e}")
+                logger.info(f"Installed dependencies from {req_file}")
+            else:
+                # Minimal fallback if file is missing.
+                packages = ["fastapi", "uvicorn", "pydantic", "numpy", "scipy", "scikit-learn"]
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-q", *packages],
+                    check=True,
+                    capture_output=True
+                )
+                logger.info("Installed fallback minimal dependencies")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed dependency installation: {e}")
 
     def _setup_gpu(self):
         try:
@@ -87,7 +85,7 @@ class ColabEnvironment:
             logger.info("Cloning repository...")
             try:
                 subprocess.run(
-                    ["git", "clone", "https://github.com/Aditya2005-cloud/PARALLER-MEMORY.git", "."],
+                    ["git", "clone", "https://github.com/Aditya2005-cloud/PARALLER_MEMORY.git", "."],
                     check=True
                 )
             except subprocess.CalledProcessError as e:

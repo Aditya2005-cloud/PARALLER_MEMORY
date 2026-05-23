@@ -23,15 +23,16 @@ class EmbeddingManager:
 
     def _load_model(self):
         if SentenceTransformer is None:
-            logger.error("sentence-transformers not installed")
-            raise ModelLoadError("sentence-transformers not installed", fallback_available=True)
+            logger.warning("sentence-transformers not installed, using fallback embedding mode")
+            self.model = None
+            return
 
         try:
             self.model = SentenceTransformer(self.model_name, device=self.device)
             logger.info(f"Loaded embedding model: {self.model_name} on device: {self.device}")
         except Exception as e:
-            logger.error(f"Failed to load embedding model: {e}")
-            raise ModelLoadError(f"Failed to load {self.model_name}: {e}", fallback_available=True)
+            logger.warning(f"Failed to load embedding model: {e}. Falling back to lightweight embeddings.")
+            self.model = None
 
     def embed_text(self, text: str) -> np.ndarray:
         if self.model is None:

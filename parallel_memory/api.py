@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .models import FeedbackIn, MemoryIn, RecallIn
 from .database import DatabaseManager, GlobalDatabaseManager
-from .pipeline import PipelineEngine
 from .exceptions import (
     MemoryError, EmbeddingError, ModelInferenceError,
     DatabaseError, UserValidationError, ParallelMemoryError
@@ -25,11 +24,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+_pipeline_cache: dict[str, object] = {}
+
 
 def validate_user_id(user_id: str) -> bool:
     if not user_id or not isinstance(user_id, str) or len(user_id) == 0:
         raise UserValidationError("Invalid user_id", user_id)
     return True
+
+
+def get_pipeline(user_id: str):
+    if user_id in _pipeline_cache:
+        return _pipeline_cache[user_id]
+    from .pipeline import PipelineEngine
+
+    engine = PipelineEngine(user_id)
+    _pipeline_cache[user_id] = engine
+    return engine
 
 
 @app.on_event("startup")
@@ -58,7 +69,7 @@ def add_memory(payload: MemoryIn) -> dict:
             model_version="1.0"
         )
 
-        pipeline = PipelineEngine(payload.user_id)
+        pipeline = get_pipeline(payload.user_id)
         embedding = pipeline.embed_text(payload.memory_text)
         serialized = pipeline.embedding_manager.serialize_embedding(embedding)
         db.store_embedding(memory_id, serialized, "1.0")
@@ -94,7 +105,7 @@ def add_recall(payload: RecallIn) -> dict:
         if not memory:
             raise HTTPException(status_code=404, detail=f"Memory not found: {payload.memory_id}")
 
-        pipeline = PipelineEngine(payload.user_id)
+        pipeline = get_pipeline(payload.user_id)
 
         result = pipeline.process_recall(
             memory_id=payload.memory_id,
@@ -262,5 +273,4 @@ def get_recent_errors(limit: int = 50) -> dict:
     except Exception as e:
         logger.error(f"Error retrieving logs: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve logs") from e
-
 
