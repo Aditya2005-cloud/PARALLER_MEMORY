@@ -1,9 +1,12 @@
-{
-  "system_status": "synchronized",
-  "recovery_mode": false,
-  "last_sync": "2026-05-23T08:01:21.446661+00:00",
-  "active_agents": [
-    "agent_codex_primary"
-  ],
-  "active_tasks": []
+﻿{
+    "system_status":  "synchronized",
+    "recovery_mode":  false,
+    "last_sync":  "2026-05-25T14:20:48.0062181Z",
+    "active_agents":  [
+                          "agent_codex_primary",
+                          "codex_cli_agent"
+                      ],
+    "active_tasks":  [
+
+                     ]
 }
